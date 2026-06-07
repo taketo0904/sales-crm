@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>営業CRM</title>
+<style>
+  :root{
+    --bg:#f3f6fb; --panel:#fff; --ink:#172033; --muted:#667085; --line:#d9e2ef;
+    --brand:#0b5cab; --brand-2:#0176d3; --nav:#032d60; --nav-2:#0f3f75;
+    --green:#188038; --amber:#b7791f; --red:#c23934; --cyan:#0b7285;
+    --chip:#eef4ff; --shadow:0 1px 2px rgba(16,24,40,.08),0 8px 24px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif;
+    background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;
+  }
+  button,input,select,textarea{font:inherit}
+  button{cursor:pointer}
+  .app{min-height:100vh;display:grid;grid-template-columns:224px 1fr}
+  .side{background:var(--nav);color:#fff;padding:14px 12px;display:flex;flex-direction:column;gap:14px}
+  .brand{display:flex;align-items:center;gap:10px;padding:8px 10px;font-weight:800}
+  .mark{width:34px;height:34px;border-radius:8px;background:#fff;color:var(--brand);display:grid;place-items:center;font-weight:900}
+  .brand span{font-size:15px}
+  .navgrp{display:flex;flex-direction:column;gap:4px}
+  .navbtn{
+    border:0;background:transparent;color:#dcecff;border-radius:6px;padding:10px 11px;text-align:left;
+    display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;
+  }
+  .navbtn:hover,.navbtn.active{background:var(--nav-2);color:#fff}
+  .ico{width:20px;height:20px;border-radius:5px;background:rgba(255,255,255,.16);display:grid;place-items:center;font-size:11px}
+  .main{min-width:0;display:flex;flex-direction:column}
+  .top{
+    height:58px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;
+    gap:12px;padding:0 18px;position:sticky;top:0;z-index:20;
+  }
+  .search{flex:1;max-width:520px;position:relative}
+  .search input{width:100%;border:1px solid var(--line);border-radius:6px;padding:10px 12px 10px 36px;background:#f8fafc}
+  .search:before{content:"⌕";position:absolute;left:13px;top:8px;color:var(--muted);font-size:18px}
+  .top-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .btn{
+    border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:6px;padding:9px 13px;
+    font-weight:800;font-size:13px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;
+  }
+  .btn:hover{background:#f8fbff;border-color:#b7c7da}
+  .btn.primary{background:var(--brand-2);border-color:var(--brand-2);color:#fff}
+  .btn.primary:hover{background:#095fb0}
+  .btn.danger{color:var(--red);border-color:#f0b8b5}
+  .content{padding:18px;display:grid;gap:16px}
+  .crumb{font-size:12px;color:var(--muted);font-weight:700}
+  .head{display:flex;justify-content:space-between;gap:14px;align-items:flex-end;flex-wrap:wrap}
+  .title h1{font-size:24px;margin:3px 0 4px}
+  .title p{margin:0;color:var(--muted);font-size:13px}
+  .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+  .metric{background:#fff;border:1px solid var(--line);border-radius:8px;padding:13px 14px;box-shadow:var(--shadow)}
+  .metric .k{font-size:12px;color:var(--muted);font-weight:800}
+  .metric .v{font-size:24px;font-weight:900;margin-top:5px}
+  .metric .s{font-size:12px;color:var(--muted);margin-top:2px}
+  .work{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);min-width:0}
+  .panelbar{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .panelbar h2{margin:0;font-size:15px}
+  .filters{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  select,.field input,.field select,.field textarea{
+    border:1px solid var(--line);border-radius:6px;background:#fff;padding:9px 10px;color:var(--ink);
+  }
+  select:focus,input:focus,textarea:focus{outline:none;border-color:var(--brand-2);box-shadow:0 0 0 3px rgba(1,118,211,.12)}
+  .tablewrap{overflow:auto}
+  table{width:100%;border-collapse:collapse;min-width:1040px}
+  th,td{border-bottom:1px solid var(--line);padding:11px 14px;text-align:left;font-size:13px;vertical-align:middle}
+  th{background:#f8fafc;color:#4b5565;font-size:12px;font-weight:900;position:sticky;top:0;z-index:1}
+  tr{transition:background .12s}
+  tbody tr:hover,tbody tr.active{background:#f2f8ff}
+  .namebtn{border:0;background:transparent;color:var(--brand);font-weight:900;padding:0;text-align:left}
+  .subtxt{color:var(--muted);font-size:12px;margin-top:2px}
+  .stage{border-radius:999px;padding:4px 9px;font-weight:900;font-size:11px;display:inline-block}
+  .stage.s1{background:#e8f2ff;color:var(--brand)}
+  .stage.s2{background:#fff5db;color:var(--amber)}
+  .stage.s3{background:#e6f7f1;color:var(--green)}
+  .stage.s4{background:#e7f7fa;color:var(--cyan)}
+  .stage.s5{background:#fdeaea;color:var(--red)}
+  .pay{border-radius:999px;padding:4px 9px;font-weight:900;font-size:11px;display:inline-block}
+  .pay.p0{background:#f1f5f9;color:#475467}
+  .pay.p1{background:#fff5db;color:var(--amber)}
+  .pay.p2{background:#e8f2ff;color:var(--brand)}
+  .pay.p3{background:#e6f7f1;color:var(--green)}
+  .pay.p4{background:#fdeaea;color:var(--red)}
+  .sidepanel{position:sticky;top:74px}
+  .record{padding:16px}
+  .avatar{width:48px;height:48px;border-radius:8px;background:#e8f2ff;color:var(--brand);display:grid;place-items:center;font-weight:900}
+  .recordtop{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+  .record h3{margin:0;font-size:17px}
+  .record .meta{font-size:12px;color:var(--muted);margin-top:3px}
+  .kv{display:grid;grid-template-columns:110px 1fr;gap:9px 10px;font-size:13px;border-top:1px solid var(--line);padding-top:13px}
+  .kv .k{color:var(--muted);font-weight:800}
+  .notes{margin-top:14px;padding:12px;background:#f8fafc;border:1px solid var(--line);border-radius:8px;font-size:13px;line-height:1.6}
+  .quickbar{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .toolsPanel{padding:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .toolsPanel .hint{font-size:12px;color:var(--muted);line-height:1.5;flex:1;min-width:220px}
+  .pipeline{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:10px;padding:14px;overflow:auto}
+  .col{background:#f8fafc;border:1px solid var(--line);border-radius:8px;min-height:132px}
+  .col h3{font-size:12px;margin:0;padding:10px 10px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}
+  .deal{margin:9px;border:1px solid var(--line);background:#fff;border-radius:7px;padding:9px}
+  .deal b{font-size:12px}
+  .deal div{color:var(--muted);font-size:11px;margin-top:3px}
+  .overlay{position:fixed;inset:0;background:rgba(9,30,66,.42);display:none;align-items:center;justify-content:center;z-index:80;padding:16px}
+  .overlay.show{display:flex}
+  .modal{background:#fff;border-radius:8px;width:min(620px,100%);box-shadow:0 24px 60px rgba(9,30,66,.22);max-height:92vh;overflow:auto}
+  .modalhead{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+  .modalhead h2{font-size:18px;margin:0}
+  .x{border:0;background:transparent;font-size:24px;color:var(--muted);line-height:1}
+  .form{padding:18px;display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field label{font-size:12px;color:var(--muted);font-weight:900}
+  .field.full{grid-column:1/-1}
+  .modalfoot{padding:14px 18px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px}
+  .empty{padding:34px;text-align:center;color:var(--muted);font-size:14px}
+  @media(max-width:980px){
+    .app{grid-template-columns:1fr}
+    .side{position:sticky;top:0;z-index:30;flex-direction:row;align-items:center;overflow:auto;padding:8px 10px}
+    .brand{flex:none}.navgrp{flex-direction:row}.navbtn{white-space:nowrap}
+    .work{grid-template-columns:1fr}.sidepanel{position:static}
+    .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media(max-width:640px){
+    .top{height:auto;padding:10px;align-items:stretch;flex-direction:column}
+    .top-actions{margin-left:0}.content{padding:12px}.metrics{grid-template-columns:1fr}
+    .form{grid-template-columns:1fr}.filters{margin-left:0;width:100%}.filters select{flex:1;min-width:140px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><div class="mark">CRM</div><span>Sales Console</span></div>
+    <nav class="navgrp" aria-label="メインメニュー">
+      <button class="navbtn active" data-view="dashboard"><span class="ico">D</span>ダッシュボード</button>
+      <button class="navbtn" data-view="deals"><span class="ico">S</span>商談</button>
+      <button class="navbtn" data-view="leads"><span class="ico">L</span>リード</button>
+      <button class="navbtn" data-view="accounts"><span class="ico">A</span>取引先</button>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <header class="top">
+      <div class="search"><input id="q" type="search" placeholder="会社名・担当者・商談名で検索"></div>
+      <div class="top-actions">
+        <button class="btn" id="exportBtn">データ出力</button>
+        <button class="btn" id="importBtn">データ取込</button>
+        <input id="importFile" type="file" accept="application/json" hidden>
+        <button class="btn" id="seedBtn" title="サンプルデータを戻す">初期化</button>
+        <button class="btn primary" id="addBtn">新規商談</button>
+      </div>
+    </header>
+
+    <section class="content">
+      <div class="head">
+        <div class="title">
+          <div class="crumb">営業管理 / CRM</div>
+          <h1 id="pageTitle">営業ダッシュボード</h1>
+          <p>顧客、リード、商談の進捗を一画面で追えるミニマムCRMです。データはこのブラウザに保存されます。</p>
+        </div>
+      </div>
+
+      <div class="metrics" id="metrics"></div>
+
+      <section class="panel" id="pipelinePanel">
+        <div class="panelbar"><h2>パイプライン</h2></div>
+        <div class="pipeline" id="pipeline"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panelbar"><h2>更新・バックアップ</h2></div>
+        <div class="toolsPanel">
+          <div class="hint">GitHub Pagesでアプリを更新しても、入力データはこのブラウザに残ります。更新前にJSONでバックアップしておくと安全です。</div>
+          <button class="btn" id="exportBtn2">データ出力</button>
+          <button class="btn" id="importBtn2">データ取込</button>
+        </div>
+      </section>
+
+      <div class="work">
+        <section class="panel">
+          <div class="panelbar">
+            <h2 id="listTitle">商談一覧</h2>
+            <div class="filters">
+              <select id="stageFilter" aria-label="ステージで絞り込み">
+                <option value="">全ステージ</option>
+                <option>初回接触</option>
+                <option>提案中</option>
+                <option>見積提示</option>
+                <option>受注</option>
+                <option>失注</option>
+              </select>
+              <select id="ownerFilter" aria-label="担当者で絞り込み">
+                <option value="">全担当</option>
+              </select>
+              <select id="paymentFilter" aria-label="入金状態で絞り込み">
+                <option value="">全入金状態</option>
+                <option>未請求</option>
+                <option>請求済み</option>
+                <option>入金待ち</option>
+                <option>入金済み</option>
+                <option>入金遅延</option>
+              </select>
+            </div>
+          </div>
+          <div class="tablewrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>商談名</th><th>取引先</th><th>担当者</th><th>金額</th><th>ステージ</th><th>入金</th><th>入金予定</th><th>次回アクション</th><th>期限</th>
+                </tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <aside class="panel sidepanel">
+          <div class="panelbar"><h2>レコード詳細</h2></div>
+          <div class="record" id="record"></div>
+        </aside>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modalhead">
+      <h2 id="modalTitle">新規商談</h2>
+      <button class="x" id="closeBtn" aria-label="閉じる">×</button>
+    </div>
+    <form class="form" id="dealForm">
+      <div class="field"><label>商談名</label><input id="f_name" required placeholder="例：採用サイト改善提案"></div>
+      <div class="field"><label>取引先</label><input id="f_account" required placeholder="例：株式会社サンプル"></div>
+      <div class="field"><label>担当者</label><input id="f_contact" placeholder="例：山田 太郎"></div>
+      <div class="field"><label>自社担当</label><input id="f_owner" placeholder="例：中川"></div>
+      <div class="field"><label>金額</label><input id="f_amount" type="number" min="0" step="10000" placeholder="300000"></div>
+      <div class="field"><label>ステージ</label><select id="f_stage"><option>初回接触</option><option>提案中</option><option>見積提示</option><option>受注</option><option>失注</option></select></div>
+      <div class="field"><label>期限</label><input id="f_due" type="date"></div>
+      <div class="field"><label>次回アクション</label><input id="f_next" placeholder="例：提案書を送付"></div>
+      <div class="field"><label>請求日</label><input id="f_invoiceDate" type="date"></div>
+      <div class="field"><label>入金予定日</label><input id="f_paymentDue" type="date"></div>
+      <div class="field"><label>入金状態</label><select id="f_paymentStatus"><option>未請求</option><option>請求済み</option><option>入金待ち</option><option>入金済み</option><option>入金遅延</option></select></div>
+      <div class="field"><label>入金確認日</label><input id="f_paidDate" type="date"></div>
+      <div class="field full"><label>メモ</label><textarea id="f_note" rows="3" placeholder="商談背景、課題、決裁者、温度感など"></textarea></div>
+    </form>
+    <div class="modalfoot">
+      <button class="btn" id="cancelBtn">キャンセル</button>
+      <button class="btn primary" id="saveBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORE = "ad_sales_crm_min_v1";
+const stages = ["初回接触","提案中","見積提示","受注","失注"];
+const stageClass = {"初回接触":"s1","提案中":"s2","見積提示":"s3","受注":"s4","失注":"s5"};
+const paymentClass = {"未請求":"p0","請求済み":"p1","入金待ち":"p2","入金済み":"p3","入金遅延":"p4"};
+const yen = n => "¥" + Number(n || 0).toLocaleString("ja-JP");
+const todayISO = () => new Date().toISOString().slice(0,10);
+const sampleDeals = [
+  {id:crypto.randomUUID(),name:"AI研修プログラム導入",account:"株式会社SHIFTAI",contact:"佐藤様",owner:"中川",amount:1200000,stage:"提案中",due:"2026-06-14",next:"研修範囲のすり合わせ",invoiceDate:"",paymentDue:"",paymentStatus:"未請求",paidDate:"",note:"人材育成文脈。決裁者同席の打ち合わせを設定したい。"},
+  {id:crypto.randomUUID(),name:"OB顧客掘り起こし施策",account:"LIFEFUND",contact:"木内様",owner:"中川",amount:650000,stage:"見積提示",due:"2026-06-10",next:"見積の確認連絡",invoiceDate:"2026-06-07",paymentDue:"2026-06-30",paymentStatus:"請求済み",paidDate:"",note:"既存顧客台帳を活用した営業支援。動画事例化も視野。"},
+  {id:crypto.randomUUID(),name:"支店売上最大化支援",account:"FCR",contact:"徳永様",owner:"中川",amount:900000,stage:"初回接触",due:"2026-06-18",next:"現状ヒアリング",invoiceDate:"",paymentDue:"",paymentStatus:"未請求",paidDate:"",note:"埼玉支店の営業活動を整理する。"},
+  {id:crypto.randomUUID(),name:"営業戦略ダッシュボード",account:"x-knock",contact:"田中様",owner:"中川",amount:480000,stage:"受注",due:"2026-06-30",next:"初回納品",invoiceDate:"2026-06-01",paymentDue:"2026-06-15",paymentStatus:"入金済み",paidDate:"2026-06-05",note:"制作、SEO、広告の横断管理を想定。"}
+];
+
+let deals = loadDeals();
+let view = "dashboard";
+let selectedId = deals[0]?.id || null;
+
+function loadDeals(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(STORE));
+    return Array.isArray(saved) && saved.length ? saved.map(normalizeDeal) : sampleDeals.map(normalizeDeal);
+  }catch(e){ return sampleDeals.map(normalizeDeal); }
+}
+function saveDeals(){ localStorage.setItem(STORE, JSON.stringify(deals)); }
+function normalizeDeal(deal){
+  const d = {...deal};
+  d.id = d.id || crypto.randomUUID();
+  d.paymentStatus = d.paymentStatus || (d.stage === "受注" ? "請求済み" : "未請求");
+  d.invoiceDate = d.invoiceDate || "";
+  d.paymentDue = d.paymentDue || "";
+  d.paidDate = d.paidDate || "";
+  if(d.paymentStatus !== "入金済み" && d.paymentDue && daysUntil(d.paymentDue) < 0) d.paymentStatus = "入金遅延";
+  return d;
+}
+function filteredDeals(){
+  const q = document.getElementById("q").value.trim().toLowerCase();
+  const stage = document.getElementById("stageFilter").value;
+  const owner = document.getElementById("ownerFilter").value;
+  const payment = document.getElementById("paymentFilter").value;
+  return deals.filter(d => {
+    const text = [d.name,d.account,d.contact,d.owner,d.next,d.note,d.paymentStatus].join(" ").toLowerCase();
+    const viewOk = view === "dashboard" || view === "deals" || (view === "leads" && d.stage === "初回接触") || (view === "accounts");
+    return viewOk && (!q || text.includes(q)) && (!stage || d.stage === stage) && (!owner || d.owner === owner) && (!payment || d.paymentStatus === payment);
+  });
+}
+function setView(next){
+  view = next;
+  document.querySelectorAll(".navbtn").forEach(btn => btn.classList.toggle("active", btn.dataset.view === view));
+  const titles = {dashboard:"営業ダッシュボード",deals:"商談",leads:"リード",accounts:"取引先"};
+  document.getElementById("pageTitle").textContent = titles[view];
+  document.getElementById("listTitle").textContent = view === "accounts" ? "取引先別の商談" : view === "leads" ? "リード一覧" : "商談一覧";
+  document.getElementById("pipelinePanel").style.display = view === "accounts" ? "none" : "block";
+  render();
+}
+function render(){
+  deals = deals.map(normalizeDeal);
+  saveDeals();
+  renderOwners();
+  renderMetrics();
+  renderPipeline();
+  renderRows();
+  renderRecord();
+}
+function renderOwners(){
+  const select = document.getElementById("ownerFilter");
+  const current = select.value;
+  const owners = [...new Set(deals.map(d => d.owner).filter(Boolean))].sort();
+  select.innerHTML = '<option value="">全担当</option>' + owners.map(o => `<option>${escapeHtml(o)}</option>`).join("");
+  select.value = owners.includes(current) ? current : "";
+}
+function renderMetrics(){
+  const open = deals.filter(d => !["受注","失注"].includes(d.stage));
+  const won = deals.filter(d => d.stage === "受注");
+  const total = open.reduce((sum,d) => sum + Number(d.amount || 0), 0);
+  const wonTotal = won.reduce((sum,d) => sum + Number(d.amount || 0), 0);
+  const dueSoon = open.filter(d => d.due && daysUntil(d.due) <= 7).length;
+  const unpaid = deals.filter(d => d.paymentStatus !== "入金済み").reduce((sum,d) => sum + Number(d.amount || 0), 0);
+  const late = deals.filter(d => d.paymentStatus === "入金遅延").length;
+  const cards = [
+    ["進行中商談", open.length + "件", "未受注・未失注"],
+    ["見込み金額", yen(total), "進行中の合計"],
+    ["未入金残", yen(unpaid), late ? "入金遅延 " + late + "件" : "入金前の合計"],
+    ["受注金額", yen(wonTotal), "受注済みの合計"]
+  ];
+  document.getElementById("metrics").innerHTML = cards.map(c => `<div class="metric"><div class="k">${c[0]}</div><div class="v">${c[1]}</div><div class="s">${c[2]}</div></div>`).join("");
+}
+function renderPipeline(){
+  document.getElementById("pipeline").innerHTML = stages.map(stage => {
+    const list = deals.filter(d => d.stage === stage);
+    const amount = list.reduce((sum,d) => sum + Number(d.amount || 0), 0);
+    return `<div class="col"><h3><span>${stage}</span><span>${yen(amount)}</span></h3>${list.map(d => `<div class="deal"><b>${escapeHtml(d.name)}</b><div>${escapeHtml(d.account)} / ${yen(d.amount)}</div></div>`).join("")}</div>`;
+  }).join("");
+}
+function renderRows(){
+  const list = filteredDeals();
+  const rows = document.getElementById("rows");
+  if(!list.length){
+    rows.innerHTML = `<tr><td colspan="9"><div class="empty">該当するレコードがありません</div></td></tr>`;
+    return;
+  }
+  rows.innerHTML = list.map(d => `
+    <tr class="${d.id === selectedId ? "active" : ""}" data-id="${d.id}">
+      <td><button class="namebtn" data-id="${d.id}">${escapeHtml(d.name)}</button><div class="subtxt">${escapeHtml(d.contact || "担当者未登録")}</div></td>
+      <td>${escapeHtml(d.account)}</td>
+      <td>${escapeHtml(d.owner || "-")}</td>
+      <td>${yen(d.amount)}</td>
+      <td><span class="stage ${stageClass[d.stage]}">${d.stage}</span></td>
+      <td><span class="pay ${paymentClass[d.paymentStatus]}">${d.paymentStatus}</span></td>
+      <td>${escapeHtml(d.paymentDue || "-")}</td>
+      <td>${escapeHtml(d.next || "-")}</td>
+      <td>${escapeHtml(d.due || "-")}</td>
+    </tr>`).join("");
+}
+function renderRecord(){
+  const d = deals.find(item => item.id === selectedId) || filteredDeals()[0] || deals[0];
+  if(!d){
+    document.getElementById("record").innerHTML = `<div class="empty">レコードがありません</div>`;
+    return;
+  }
+  selectedId = d.id;
+  const initials = (d.account || d.name || "CRM").slice(0,3).toUpperCase();
+  document.getElementById("record").innerHTML = `
+    <div class="recordtop"><div class="avatar">${escapeHtml(initials)}</div><div><h3>${escapeHtml(d.name)}</h3><div class="meta">${escapeHtml(d.account)} / ${escapeHtml(d.contact || "担当者未登録")}</div></div></div>
+    <div class="kv">
+      <div class="k">ステージ</div><div><span class="stage ${stageClass[d.stage]}">${d.stage}</span></div>
+      <div class="k">金額</div><div>${yen(d.amount)}</div>
+      <div class="k">入金状態</div><div><span class="pay ${paymentClass[d.paymentStatus]}">${d.paymentStatus}</span></div>
+      <div class="k">請求日</div><div>${escapeHtml(d.invoiceDate || "-")}</div>
+      <div class="k">入金予定</div><div>${escapeHtml(d.paymentDue || "-")}</div>
+      <div class="k">入金確認日</div><div>${escapeHtml(d.paidDate || "-")}</div>
+      <div class="k">自社担当</div><div>${escapeHtml(d.owner || "-")}</div>
+      <div class="k">期限</div><div>${escapeHtml(d.due || "-")}</div>
+      <div class="k">次回</div><div>${escapeHtml(d.next || "-")}</div>
+    </div>
+    <div class="notes">${escapeHtml(d.note || "メモは未登録です。")}</div>
+    <div class="quickbar">
+      <button class="btn primary" id="confirmPayment">${d.paymentStatus === "入金済み" ? "入金済み" : "入金確認"}</button>
+      <button class="btn" id="editSelected">編集</button>
+      <button class="btn danger" id="deleteSelected">削除</button>
+    </div>`;
+  document.getElementById("confirmPayment").onclick = () => confirmPayment(d.id);
+  document.getElementById("editSelected").onclick = () => openModal(d);
+  document.getElementById("deleteSelected").onclick = () => deleteDeal(d.id);
+}
+function openModal(deal){
+  const d = deal || {};
+  document.getElementById("modalTitle").textContent = deal ? "商談を編集" : "新規商談";
+  document.getElementById("f_name").value = d.name || "";
+  document.getElementById("f_account").value = d.account || "";
+  document.getElementById("f_contact").value = d.contact || "";
+  document.getElementById("f_owner").value = d.owner || "中川";
+  document.getElementById("f_amount").value = d.amount || "";
+  document.getElementById("f_stage").value = d.stage || "初回接触";
+  document.getElementById("f_due").value = d.due || "";
+  document.getElementById("f_next").value = d.next || "";
+  document.getElementById("f_invoiceDate").value = d.invoiceDate || "";
+  document.getElementById("f_paymentDue").value = d.paymentDue || "";
+  document.getElementById("f_paymentStatus").value = d.paymentStatus || "未請求";
+  document.getElementById("f_paidDate").value = d.paidDate || "";
+  document.getElementById("f_note").value = d.note || "";
+  document.getElementById("dealForm").dataset.editing = d.id || "";
+  document.getElementById("overlay").classList.add("show");
+}
+function closeModal(){ document.getElementById("overlay").classList.remove("show"); }
+function saveDeal(){
+  const form = document.getElementById("dealForm");
+  if(!document.getElementById("f_name").value.trim() || !document.getElementById("f_account").value.trim()){
+    form.reportValidity();
+    return;
+  }
+  const deal = {
+    id: form.dataset.editing || crypto.randomUUID(),
+    name: document.getElementById("f_name").value.trim(),
+    account: document.getElementById("f_account").value.trim(),
+    contact: document.getElementById("f_contact").value.trim(),
+    owner: document.getElementById("f_owner").value.trim(),
+    amount: Number(document.getElementById("f_amount").value || 0),
+    stage: document.getElementById("f_stage").value,
+    due: document.getElementById("f_due").value,
+    next: document.getElementById("f_next").value.trim(),
+    invoiceDate: document.getElementById("f_invoiceDate").value,
+    paymentDue: document.getElementById("f_paymentDue").value,
+    paymentStatus: document.getElementById("f_paymentStatus").value,
+    paidDate: document.getElementById("f_paidDate").value,
+    note: document.getElementById("f_note").value.trim()
+  };
+  const idx = deals.findIndex(d => d.id === deal.id);
+  if(idx >= 0) deals[idx] = deal; else deals.unshift(deal);
+  selectedId = deal.id;
+  saveDeals();
+  closeModal();
+  render();
+}
+function confirmPayment(id){
+  const idx = deals.findIndex(d => d.id === id);
+  if(idx < 0) return;
+  deals[idx] = {...deals[idx], paymentStatus:"入金済み", paidDate:todayISO()};
+  selectedId = id;
+  saveDeals();
+  render();
+}
+function deleteDeal(id){
+  if(!confirm("この商談を削除しますか？")) return;
+  deals = deals.filter(d => d.id !== id);
+  selectedId = deals[0]?.id || null;
+  saveDeals();
+  render();
+}
+function exportData(){
+  const data = {version:"1.1.0", exportedAt:new Date().toISOString(), deals:deals.map(normalizeDeal)};
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "sales-crm-backup-" + todayISO() + ".json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+function importData(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const parsed = JSON.parse(reader.result);
+      const imported = Array.isArray(parsed) ? parsed : parsed.deals;
+      if(!Array.isArray(imported)) throw new Error("deals not found");
+      deals = imported.map(normalizeDeal);
+      selectedId = deals[0]?.id || null;
+      saveDeals();
+      render();
+      alert("データを取り込みました。");
+    }catch(e){
+      alert("取り込みに失敗しました。JSONファイルを確認してください。");
+    }
+  };
+  reader.readAsText(file);
+}
+function daysUntil(date){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const due = new Date(date); due.setHours(0,0,0,0);
+  return Math.ceil((due - today) / 86400000);
+}
+function escapeHtml(str){
+  return String(str ?? "").replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
+}
+
+document.querySelectorAll(".navbtn").forEach(btn => btn.addEventListener("click", () => setView(btn.dataset.view)));
+document.getElementById("q").addEventListener("input", render);
+document.getElementById("stageFilter").addEventListener("change", render);
+document.getElementById("ownerFilter").addEventListener("change", render);
+document.getElementById("paymentFilter").addEventListener("change", render);
+document.getElementById("addBtn").addEventListener("click", () => openModal());
+document.getElementById("closeBtn").addEventListener("click", closeModal);
+document.getElementById("cancelBtn").addEventListener("click", closeModal);
+document.getElementById("saveBtn").addEventListener("click", saveDeal);
+document.getElementById("exportBtn").addEventListener("click", exportData);
+document.getElementById("exportBtn2").addEventListener("click", exportData);
+document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
+document.getElementById("importBtn2").addEventListener("click", () => document.getElementById("importFile").click());
+document.getElementById("importFile").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if(file) importData(file);
+  e.target.value = "";
+});
+document.getElementById("overlay").addEventListener("click", e => { if(e.target.id === "overlay") closeModal(); });
+document.getElementById("rows").addEventListener("click", e => {
+  const row = e.target.closest("[data-id]");
+  if(!row) return;
+  selectedId = row.dataset.id;
+  renderRows();
+  renderRecord();
+});
+document.getElementById("seedBtn").addEventListener("click", () => {
+  if(!confirm("サンプルデータに戻しますか？現在のローカルデータは上書きされます。")) return;
+  deals = sampleDeals.map(d => ({...d, id: crypto.randomUUID()}));
+  selectedId = deals[0].id;
+  saveDeals();
+  render();
+});
+render();
+</script>
+</body>
+</html>
