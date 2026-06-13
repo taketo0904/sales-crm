@@ -231,7 +231,7 @@
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modalhead">
       <h2 id="modalTitle">新規商談</h2>
-      <button class="x" id="closeBtn" aria-label="閉じる">×</button>
+      <button class="x" id="closeBtn" type="button" aria-label="閉じる">×</button>
     </div>
     <form class="form" id="dealForm">
       <div class="field"><label>商談名</label><input id="f_name" required placeholder="例：採用サイト改善提案"></div>
@@ -249,8 +249,8 @@
       <div class="field full"><label>メモ</label><textarea id="f_note" rows="3" placeholder="商談背景、課題、決裁者、温度感など"></textarea></div>
     </form>
     <div class="modalfoot">
-      <button class="btn" id="cancelBtn">キャンセル</button>
-      <button class="btn primary" id="saveBtn">保存</button>
+      <button class="btn" id="cancelBtn" type="button">キャンセル</button>
+      <button class="btn primary" id="saveBtn" type="button">保存</button>
     </div>
   </div>
 </div>
@@ -262,11 +262,12 @@ const stageClass = {"初回接触":"s1","提案中":"s2","見積提示":"s3","�
 const paymentClass = {"未請求":"p0","請求済み":"p1","入金待ち":"p2","入金済み":"p3","入金遅延":"p4"};
 const yen = n => "¥" + Number(n || 0).toLocaleString("ja-JP");
 const todayISO = () => new Date().toISOString().slice(0,10);
+const uid = () => (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : "id-" + Date.now() + "-" + Math.random().toString(36).slice(2);
 const sampleDeals = [
-  {id:crypto.randomUUID(),name:"AI研修プログラム導入",account:"株式会社SHIFTAI",contact:"佐藤様",owner:"中川",amount:1200000,stage:"提案中",due:"2026-06-14",next:"研修範囲のすり合わせ",invoiceDate:"",paymentDue:"",paymentStatus:"未請求",paidDate:"",note:"人材育成文脈。決裁者同席の打ち合わせを設定したい。"},
-  {id:crypto.randomUUID(),name:"OB顧客掘り起こし施策",account:"LIFEFUND",contact:"木内様",owner:"中川",amount:650000,stage:"見積提示",due:"2026-06-10",next:"見積の確認連絡",invoiceDate:"2026-06-07",paymentDue:"2026-06-30",paymentStatus:"請求済み",paidDate:"",note:"既存顧客台帳を活用した営業支援。動画事例化も視野。"},
-  {id:crypto.randomUUID(),name:"支店売上最大化支援",account:"FCR",contact:"徳永様",owner:"中川",amount:900000,stage:"初回接触",due:"2026-06-18",next:"現状ヒアリング",invoiceDate:"",paymentDue:"",paymentStatus:"未請求",paidDate:"",note:"埼玉支店の営業活動を整理する。"},
-  {id:crypto.randomUUID(),name:"営業戦略ダッシュボード",account:"x-knock",contact:"田中様",owner:"中川",amount:480000,stage:"受注",due:"2026-06-30",next:"初回納品",invoiceDate:"2026-06-01",paymentDue:"2026-06-15",paymentStatus:"入金済み",paidDate:"2026-06-05",note:"制作、SEO、広告の横断管理を想定。"}
+  {id:uid(),name:"AI研修プログラム導入",account:"株式会社SHIFTAI",contact:"佐藤様",owner:"中川",amount:1200000,stage:"提案中",due:"2026-06-14",next:"研修範囲のすり合わせ",invoiceDate:"",paymentDue:"",paymentStatus:"未請求",paidDate:"",note:"人材育成文脈。決裁者同席の打ち合わせを設定したい。"},
+  {id:uid(),name:"OB顧客掘り起こし施策",account:"LIFEFUND",contact:"木内様",owner:"中川",amount:650000,stage:"見積提示",due:"2026-06-10",next:"見積の確認連絡",invoiceDate:"2026-06-07",paymentDue:"2026-06-30",paymentStatus:"請求済み",paidDate:"",note:"既存顧客台帳を活用した営業支援。動画事例化も視野。"},
+  {id:uid(),name:"支店売上最大化支援",account:"FCR",contact:"徳永様",owner:"中川",amount:900000,stage:"初回接触",due:"2026-06-18",next:"現状ヒアリング",invoiceDate:"",paymentDue:"",paymentStatus:"未請求",paidDate:"",note:"埼玉支店の営業活動を整理する。"},
+  {id:uid(),name:"営業戦略ダッシュボード",account:"x-knock",contact:"田中様",owner:"中川",amount:480000,stage:"受注",due:"2026-06-30",next:"初回納品",invoiceDate:"2026-06-01",paymentDue:"2026-06-15",paymentStatus:"入金済み",paidDate:"2026-06-05",note:"制作、SEO、広告の横断管理を想定。"}
 ];
 
 let deals = loadDeals();
@@ -282,7 +283,7 @@ function loadDeals(){
 function saveDeals(){ localStorage.setItem(STORE, JSON.stringify(deals)); }
 function normalizeDeal(deal){
   const d = {...deal};
-  d.id = d.id || crypto.randomUUID();
+  d.id = d.id || uid();
   d.paymentStatus = d.paymentStatus || (d.stage === "受注" ? "請求済み" : "未請求");
   d.invoiceDate = d.invoiceDate || "";
   d.paymentDue = d.paymentDue || "";
@@ -309,6 +310,12 @@ function setView(next){
   document.getElementById("listTitle").textContent = view === "accounts" ? "取引先別の商談" : view === "leads" ? "リード一覧" : "商談一覧";
   document.getElementById("pipelinePanel").style.display = view === "accounts" ? "none" : "block";
   render();
+}
+function clearFilters(){
+  document.getElementById("q").value = "";
+  document.getElementById("stageFilter").value = "";
+  document.getElementById("ownerFilter").value = "";
+  document.getElementById("paymentFilter").value = "";
 }
 function render(){
   deals = deals.map(normalizeDeal);
@@ -427,7 +434,7 @@ function saveDeal(){
     return;
   }
   const deal = {
-    id: form.dataset.editing || crypto.randomUUID(),
+    id: form.dataset.editing || uid(),
     name: document.getElementById("f_name").value.trim(),
     account: document.getElementById("f_account").value.trim(),
     contact: document.getElementById("f_contact").value.trim(),
@@ -447,7 +454,8 @@ function saveDeal(){
   selectedId = deal.id;
   saveDeals();
   closeModal();
-  render();
+  clearFilters();
+  setView("deals");
 }
 function confirmPayment(id){
   const idx = deals.findIndex(d => d.id === id);
@@ -510,6 +518,10 @@ document.getElementById("addBtn").addEventListener("click", () => openModal());
 document.getElementById("closeBtn").addEventListener("click", closeModal);
 document.getElementById("cancelBtn").addEventListener("click", closeModal);
 document.getElementById("saveBtn").addEventListener("click", saveDeal);
+document.getElementById("dealForm").addEventListener("submit", e => {
+  e.preventDefault();
+  saveDeal();
+});
 document.getElementById("exportBtn").addEventListener("click", exportData);
 document.getElementById("exportBtn2").addEventListener("click", exportData);
 document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
