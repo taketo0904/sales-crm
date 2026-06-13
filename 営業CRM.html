@@ -541,7 +541,7 @@ document.getElementById("rows").addEventListener("click", e => {
 });
 document.getElementById("seedBtn").addEventListener("click", () => {
   if(!confirm("サンプルデータに戻しますか？現在のローカルデータは上書きされます。")) return;
-  deals = sampleDeals.map(d => ({...d, id: crypto.randomUUID()}));
+  deals = sampleDeals.map(d => ({...d, id: uid()}));
   selectedId = deals[0].id;
   saveDeals();
   render();
